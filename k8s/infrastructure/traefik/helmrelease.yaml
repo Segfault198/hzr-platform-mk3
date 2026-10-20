@@ -34,8 +34,6 @@ spec:
       spec:
         loadBalancerIP: 172.16.30.11
         externalTrafficPolicy: Local
-      annotations:
-        metallb.io/loadBalancerIPs: "172.16.30.11"
     ports:
       web:
         port: 8000
