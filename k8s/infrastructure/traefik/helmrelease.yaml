@@ -18,6 +18,7 @@ spec:
     crds: CreateReplace
     remediation:
       retries: 5
+    timeout: 15m0s
   upgrade:
     crds: CreateReplace
     remediation:

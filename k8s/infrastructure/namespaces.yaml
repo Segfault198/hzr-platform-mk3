@@ -1,14 +1,28 @@
+# Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA baseline.
+# Longhorn (privileged + hostPath) and Traefik (hostNetwork) need privileged.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: longhorn-system
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: traefik
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: hzr-sites
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
