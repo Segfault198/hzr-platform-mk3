@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # flux-system/ is created by: flux bootstrap github --path clusters/lab
+  - flux-system
+  - infrastructure.yaml
+  - apps.yaml

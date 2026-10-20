@@ -1,0 +1,10 @@
+# Talos / kube generated locally — never commit
+talosconfig
+kubeconfig
+*.talosconfig
+talos/generated/
+secrets.yaml
+*.secrets.yaml
+.env
+.iso/
+*.iso

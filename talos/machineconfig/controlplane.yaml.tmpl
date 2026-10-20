@@ -1,0 +1,39 @@
+# Copy to talos/generated/controlplane.yaml and replace LAB_* .
+# Do not commit filled configs.
+#
+# version: v1alpha1 is the Talos machine config API. Pin installer
+# image to the same Image Factory schematic as the ISO.
+
+machine:
+  type: controlplane
+  install:
+    disk: /dev/sda
+    image: LAB_INSTALLER_IMAGE
+  network:
+    hostname: hzr-cp-1
+    interfaces:
+      - interface: eth0
+        dhcp: true
+        vip:
+          ip: LAB_VIP
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw
+  sysctls:
+    vm.nr_hugepages: "0"
+
+cluster:
+  clusterName: hzr-lab
+  controlPlane:
+    endpoint: https://LAB_VIP:6443
+  network:
+    cni:
+      name: flannel
+  proxy:
+    disabled: false

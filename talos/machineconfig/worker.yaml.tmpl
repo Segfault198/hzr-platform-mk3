@@ -1,0 +1,27 @@
+# Copy to talos/generated/worker.yaml and replace LAB_* .
+# Use the same file for hzr-w-1 and hzr-w-2; hostname comes from DHCP or
+# a per-node copy.
+
+machine:
+  type: worker
+  install:
+    disk: /dev/sda
+    image: LAB_INSTALLER_IMAGE
+  network:
+    hostname: LAB_WORKER_HOSTNAME
+    interfaces:
+      - interface: eth0
+        dhcp: true
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw
+
+cluster:
+  controlPlane:
+    endpoint: https://LAB_VIP:6443
