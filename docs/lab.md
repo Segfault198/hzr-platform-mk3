@@ -79,7 +79,7 @@ talosctl bootstrap --nodes $CONTROL_PLANE_IP --talosconfig=./talos/generated/tal
 talosctl kubeconfig ./kubeconfig --nodes $CONTROL_PLANE_IP --talosconfig=./talos/generated/talosconfig
 ```
 
-VIP / static IP is optional for lab v1. DHCP IPs from the console are enough to prove Longhorn + Flux. If DHCP is missing, the Proxmox guide has a GRUB `ip=` one-shot.
+Lab VIPs on VLAN 30 (UniFi DHCP pool starts at `.32` so `.10`/`.11` stay free): API **172.16.30.10** (`api.hzr.lab`, Talos `ens18` vip), ingress **172.16.30.11** (`ingress.hzr.lab`, MetalLB L2). Point `monitor`/`grafana`/`prometheus.hzr.lab` at `.11`. If DHCP is missing, the Proxmox guide has a GRUB `ip=` one-shot.
 
 ## Flux
 
@@ -95,13 +95,13 @@ flux bootstrap github \
 
 `clusters/lab/kustomization.yaml` must list `flux-system` plus `infrastructure.yaml` and `apps.yaml`. If bootstrap rewrote that file, add those two lines back and push.
 
-Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA **baseline**. Longhorn (privileged + hostPath) and Traefik (hostNetwork) need `pod-security.kubernetes.io/enforce: privileged` on `longhorn-system`, `traefik`, and `hzr-sites`.
+Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA **baseline**. Longhorn (privileged + hostPath), MetalLB speaker, and Traefik need `pod-security.kubernetes.io/enforce: privileged` on `longhorn-system`, `metallb-system`, `traefik`, and `hzr-sites`.
 
-Traefik chart 34 defaults `web` to container port **8000**. With `hostNetwork`, that is the LAN port — set `ports.web.port: 80` (and 443). The chart also runs uid 65532 and drops ALL capabilities; Talos still denies bind to :80/:443 (no ambient caps). Lab values run uid 0 and add `NET_BIND_SERVICE` after drop ALL.
+Traefik is `Service type: LoadBalancer` at **172.16.30.11** (MetalLB L2). Container ports stay 8000/8443; Service exposes 80/443. Not hostNetwork.
 
 Longhorn lab: workers need `node.longhorn.io/create-default-disk=true` (Helm `createDefaultDiskLabeledNodes`). Default StorageClass from the chart baked `numberOfReplicas: "3"` (parameters immutable); use `longhorn-lab` (2 replicas) until that SC is recreated. `defaultSettings.defaultReplicaCount` is the chart key, not `replicaCount`.
 
-Lab monitoring: kube-prometheus-stack on `longhorn-lab` PVCs (Prometheus 8Gi / Grafana 2Gi). LAN Hosts `grafana.hzr.lab` and `prometheus.hzr.lab`. Alertmanager off. Grafana login is the lab Helm value (admin). Traefik hostNetwork metrics listen on 8082 (chart default 9100 collides with node-exporter on the Traefik node). Grafana 256Mi limit OOMKilled on first dashboards load; lab limit is 768Mi. Prometheus is pinned to `hzr-w-1`, Grafana to `hzr-w-2` so one 4Gi worker does not run both.
+Lab monitoring: kube-prometheus-stack on `longhorn-lab` PVCs (Prometheus 8Gi / Grafana 2Gi). LAN Hosts `grafana.hzr.lab` and `prometheus.hzr.lab`. Alertmanager off. Grafana login is the lab Helm value (admin). Grafana 256Mi limit OOMKilled on first dashboards load; lab limit is 768Mi. Prometheus is pinned to `hzr-w-1`, Grafana to `hzr-w-2` so one 4Gi worker does not run both.
 
 ## Acceptance
 
@@ -111,4 +111,4 @@ Lab monitoring: kube-prometheus-stack on `longhorn-lab` PVCs (Prometheus 8Gi / G
 
 ## Out of v1
 
-Public TLS, hamsterbot, MetalLB, hosting provider.
+Public TLS, hamsterbot, hosting provider.

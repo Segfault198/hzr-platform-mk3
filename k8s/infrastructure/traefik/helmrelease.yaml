@@ -25,43 +25,28 @@ spec:
       retries: 3
     timeout: 15m0s
   values:
-    # Lab: no cloud LB. Host network — container port *is* the host port.
-    # Chart default web=8000; set port 80/443 for LAN.
+    # Ingress VIP via MetalLB L2 (172.16.30.11). Not hostNetwork.
     deployment:
       replicas: 1
-    hostNetwork: true
-    # Chart runs uid 65532 and drops ALL. Talos will not let that bind :80/:443
-    # even with NET_BIND_SERVICE (no ambient caps). uid 0 + add the cap back
-    # after drop ALL (root also loses bind without it).
-    podSecurityContext:
-      runAsNonRoot: false
-      runAsUser: 0
-      runAsGroup: 0
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-        add:
-          - NET_BIND_SERVICE
+    hostNetwork: false
     service:
-      type: ClusterIP
+      type: LoadBalancer
+      spec:
+        loadBalancerIP: 172.16.30.11
+        externalTrafficPolicy: Local
+      annotations:
+        metallb.io/loadBalancerIPs: "172.16.30.11"
     ports:
       web:
-        port: 80
+        port: 8000
         expose:
           default: true
+        exposedPort: 80
       websecure:
-        port: 443
+        port: 8443
         expose:
           default: true
-      # hostNetwork: chart default metrics=9100 collides with node-exporter.
-      metrics:
-        port: 8082
-        expose:
-          default: false
-        exposedPort: 8082
+        exposedPort: 443
     ingressRoute:
       dashboard:
         enabled: false

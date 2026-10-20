@@ -6,7 +6,7 @@
 
 - `machine.install.image` = Image Factory `metal-installer/<schematic>:v1.14.x` matching the ISO
 - `machine.kubelet.extraMounts` for `/var/lib/longhorn` (Longhorn on Talos)
-- optional `machine.network.interfaces[].vip` later; skip for DHCP lab v1
+- `machine.network.interfaces[].vip` **172.16.30.10** on CP `ens18` (API). Ingress VIP is MetalLB **172.16.30.11**, not Talos.
 
 Generated files (`controlplane.yaml`, `worker.yaml`, `talosconfig`) stay in `talos/generated/` (gitignored).
 
