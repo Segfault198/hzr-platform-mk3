@@ -56,6 +56,12 @@ spec:
         port: 443
         expose:
           default: true
+      # hostNetwork: chart default metrics=9100 collides with node-exporter.
+      metrics:
+        port: 8082
+        expose:
+          default: false
+        exposedPort: 8082
     ingressRoute:
       dashboard:
         enabled: false
