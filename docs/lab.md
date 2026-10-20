@@ -101,6 +101,8 @@ Traefik chart 34 defaults `web` to container port **8000**. With `hostNetwork`, 
 
 Longhorn lab: workers need `node.longhorn.io/create-default-disk=true` (Helm `createDefaultDiskLabeledNodes`). Default StorageClass from the chart baked `numberOfReplicas: "3"` (parameters immutable); use `longhorn-lab` (2 replicas) until that SC is recreated. `defaultSettings.defaultReplicaCount` is the chart key, not `replicaCount`.
 
+Lab monitoring: kube-prometheus-stack on `longhorn-lab` PVCs (Prometheus 8Gi / Grafana 2Gi). LAN Hosts `grafana.hzr.lab` and `prometheus.hzr.lab`. Alertmanager off. Grafana login is the lab Helm value (admin).
+
 ## Acceptance
 
 - PVC binds; volume remounts after a node reboot
