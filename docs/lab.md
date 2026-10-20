@@ -99,6 +99,8 @@ Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA **baseline**. Longho
 
 Traefik chart 34 defaults `web` to container port **8000**. With `hostNetwork`, that is the LAN port — set `ports.web.port: 80` (and 443). The chart also runs uid 65532 and drops ALL capabilities; Talos still denies bind to :80/:443 (no ambient caps). Lab values run uid 0 and add `NET_BIND_SERVICE` after drop ALL.
 
+Longhorn lab: workers need `node.longhorn.io/create-default-disk=true` (Helm `createDefaultDiskLabeledNodes`). Default StorageClass from the chart baked `numberOfReplicas: "3"` (parameters immutable); use `longhorn-lab` (2 replicas) until that SC is recreated. `defaultSettings.defaultReplicaCount` is the chart key, not `replicaCount`.
+
 ## Acceptance
 
 - PVC binds; volume remounts after a node reboot

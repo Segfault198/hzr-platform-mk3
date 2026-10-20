@@ -1,0 +1,17 @@
+# Helm-created default SC baked numberOfReplicas=3 (wrong chart keys).
+# parameters on that SC are immutable. Lab volumes use this 2-replica class.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-lab
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "2"
+  staleReplicaTimeout: "30"
+  fsType: ext4
+  dataEngine: v1
+  dataLocality: disabled
+  disableRevisionCounter: "true"

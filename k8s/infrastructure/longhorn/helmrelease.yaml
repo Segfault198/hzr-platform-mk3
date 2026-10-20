@@ -29,14 +29,14 @@ spec:
     csi:
       kubeletRootDir: /var/lib/kubelet
     defaultSettings:
-      replicaCount: 2
+      # Chart keys (not replicaCount). 2 workers → 2 replicas.
+      defaultReplicaCount: 2
       defaultDataPath: /var/lib/longhorn
-      defaultClassReplicaCount: 2
       createDefaultDiskLabeledNodes: true
-      volumeBindingMode: WaitForFirstConsumer
       allowVolumeCreationWithDegradedAvailability: true
     persistence:
       defaultClass: true
+      defaultClassReplicaCount: 2
     service:
       ui:
         type: ClusterIP
