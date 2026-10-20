@@ -95,6 +95,10 @@ flux bootstrap github \
 
 `clusters/lab/kustomization.yaml` must list `flux-system` plus `infrastructure.yaml` and `apps.yaml`. If bootstrap rewrote that file, add those two lines back and push.
 
+Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA **baseline**. Longhorn (privileged + hostPath) and Traefik (hostNetwork) need `pod-security.kubernetes.io/enforce: privileged` on `longhorn-system`, `traefik`, and `hzr-sites`.
+
+Traefik chart 34 defaults `web` to container port **8000**. With `hostNetwork`, that is the LAN port — set `ports.web.port: 80` (and 443). The chart also runs uid 65532 and drops ALL capabilities; Talos still denies bind to :80/:443 (no ambient caps). Lab values run uid 0 and add `NET_BIND_SERVICE` after drop ALL.
+
 ## Acceptance
 
 - PVC binds; volume remounts after a node reboot
