@@ -1,38 +1,85 @@
 # Lab bring-up (overmind)
 
-Guest create is a **hard gate**. This file assumes the three VMs exist and you have a Talos ISO.
+Follow the official [Talos on Proxmox](https://docs.siderolabs.com/talos/v1.14/platform-specific-installations/virtualized-platforms/proxmox) guide, then Flux from this repo.
 
-## ISO
+Guest create is a **hard gate**. Live Mk II is untouched.
 
-Build (or download) from [Image Factory](https://factory.talos.dev) with **system extensions**:
+## Image (there is an ISO)
 
-- `siderolabs/qemu-guest-agent`
-- `siderolabs/iscsi-tools`
-- `siderolabs/util-linux-tools`
+Factory does not look like a distro download page. The artifact for Proxmox is still an ISO:
 
-Same schematic ID on all three nodes. Drop the ISO on overmind; do not commit `.iso` files here.
-
-## After VMs exist
-
-Fill IPs in copies of the templates (keep generated files out of git):
-
-```bash
-cp talos/machineconfig/controlplane.yaml.tmpl talos/generated/controlplane.yaml
-cp talos/machineconfig/worker.yaml.tmpl talos/generated/worker.yaml
-# edit LAB_* placeholders
+```
+https://factory.talos.dev/image/<schematic>/<version>/metal-amd64.iso
 ```
 
-Apply and bootstrap (example):
+Vanilla schematic (no extensions), v1.14.4 example from the Proxmox docs:
+
+```
+https://factory.talos.dev/image/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba/v1.14.4/metal-amd64.iso
+```
+
+ISO boots **in RAM** (maintenance mode). Nothing is written to disk until `talosctl apply-config`. The matching **installer image** (`factory.talos.dev/metal-installer/<schematic>:v1.14.x`) is what actually lands on `/dev/sdX`.
+
+For this lab, build a **custom schematic** at [factory.talos.dev](https://factory.talos.dev):
+
+| Extension | Why |
+|---|---|
+| `siderolabs/qemu-guest-agent` | Optional. Only if Proxmox QEMU Guest Agent is enabled |
+| `siderolabs/iscsi-tools` | Longhorn |
+| `siderolabs/util-linux-tools` | Longhorn |
+
+Same schematic on ISO **and** `machine.install.image`. Do not enable Guest Agent in Proxmox unless the ISO has that extension (log spam otherwise).
+
+Do not commit `.iso` files.
+
+## Proxmox VM settings (from the v1.14 guide)
+
+| Setting | Value | Why |
+|---|---|---|
+| BIOS | OVMF (UEFI) + 4MB EFI disk, Pre-Enroll Keys **off** | |
+| Machine | `q35` | |
+| CPU | `host`, 2+ cores | Talos wants x86-64-v2; `kvm64` is too old |
+| Memory | 4 GiB lab (official rec is 4 CP / 8 workers — we do not have that headroom) | **Ballooning off** — Talos has no memory hotplug |
+| Disk | **VirtIO SCSI** (not VirtIO SCSI **Single**) | Single hangs bootstrap ([#11173](https://github.com/siderolabs/talos/issues/11173)) |
+| Format | Raw | |
+| NIC | virtio on `vmbr0` (or the ranch bridge) | |
+| Serial | `ttyS0` | Early boot / DHCP debug |
+
+Three VMs: `hzr-cp-1`, `hzr-w-1`, `hzr-w-2`. Upload ISO to local storage, attach as CD.
+
+## After the VMs boot (official sequence)
+
+ISO → maintenance console shows DHCP IP. Then **`talosctl gen config`**, not hand-edited templates.
 
 ```bash
-talosctl apply-config --insecure --nodes $CP_IP --file talos/generated/controlplane.yaml
-talosctl apply-config --insecure --nodes $W1_IP --file talos/generated/worker.yaml
-talosctl apply-config --insecure --nodes $W2_IP --file talos/generated/worker.yaml
-talosctl config endpoint $CP_IP
-talosctl config node $CP_IP
-talosctl bootstrap
-talosctl kubeconfig ./kubeconfig
+export CONTROL_PLANE_IP=<from console>
+# workers later: WORKER_IP=(...)
+
+# ISO is RAM-only; unmount CD before install so the install disk is obvious
+talosctl get disks --insecure --nodes $CONTROL_PLANE_IP
+
+export CLUSTER_NAME=hzr-lab
+export DISK_NAME=<id from get disks, often sda>
+
+talosctl gen config $CLUSTER_NAME https://$CONTROL_PLANE_IP:6443 \
+  --install-disk /dev/$DISK_NAME \
+  --output-dir talos/generated/
+
+# Patch generated YAML: Longhorn extraMounts, factory installer image
+# (see talos/README.md). Do not commit talos/generated/.
+
+talosctl apply-config --insecure --nodes $CONTROL_PLANE_IP \
+  --file talos/generated/controlplane.yaml
+
+# start workers, same worker.yaml, then:
+# talosctl apply-config --insecure --nodes $W_IP --file talos/generated/worker.yaml
+
+talosctl --talosconfig=./talos/generated/talosconfig config endpoints $CONTROL_PLANE_IP
+talosctl bootstrap --nodes $CONTROL_PLANE_IP --talosconfig=./talos/generated/talosconfig
+talosctl kubeconfig ./kubeconfig --nodes $CONTROL_PLANE_IP --talosconfig=./talos/generated/talosconfig
 ```
+
+VIP / static IP is optional for lab v1. DHCP IPs from the console are enough to prove Longhorn + Flux. If DHCP is missing, the Proxmox guide has a GRUB `ip=` one-shot.
 
 ## Flux
 
@@ -46,13 +93,13 @@ flux bootstrap github \
   --personal
 ```
 
-After bootstrap, `clusters/lab/kustomization.yaml` must list `flux-system` plus the two Flux Kustomizations in this repo (`infrastructure.yaml`, `apps.yaml`). If bootstrap rewrote that file, add those two lines back and push.
+`clusters/lab/kustomization.yaml` must list `flux-system` plus `infrastructure.yaml` and `apps.yaml`. If bootstrap rewrote that file, add those two lines back and push.
 
 ## Acceptance
 
 - PVC binds; volume remounts after a node reboot
 - Kill a worker; Longhorn volume stays healthy on remaining replicas
-- `monitor` from `hzr-sites` serves on the lab IngressRoute (`monitor.hzr.lab` — `/etc/hosts` or LAN DNS)
+- `monitor` from `hzr-sites` at `Host(monitor.hzr.lab)`
 
 ## Out of v1
 
