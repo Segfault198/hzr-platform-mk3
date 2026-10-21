@@ -7,6 +7,7 @@
 - `machine.install.image` = Image Factory `metal-installer/<schematic>:v1.14.x` matching the ISO
 - `machine.kubelet.extraMounts` for `/var/lib/longhorn` (Longhorn on Talos)
 - `machine.network.interfaces[].vip` **172.16.30.10** on CP `ens18` (API). Ingress VIP is MetalLB **172.16.30.11**, not Talos.
+- Workers: `KubeNodeConfig.labels` `node.longhorn.io/create-default-disk: "true"` (`talos/patches/worker-longhorn-labels.yaml`). Not `machine.nodeLabels` (v1.14 moved it).
 
 Generated files (`controlplane.yaml`, `worker.yaml`, `talosconfig`) stay in `talos/generated/` (gitignored).
 

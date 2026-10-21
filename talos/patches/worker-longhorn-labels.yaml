@@ -1,0 +1,8 @@
+# Applied with:
+#   talosctl patch mc --nodes <w-1>,<w-2> --mode=auto --patch @talos/patches/worker-longhorn-labels.yaml
+# Talos v1.14: labels live on KubeNodeConfig, not machine.nodeLabels.
+# Do not apply on the control plane.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  node.longhorn.io/create-default-disk: "true"

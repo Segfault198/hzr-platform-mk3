@@ -99,7 +99,7 @@ Talos v1.14 / k8s 1.37 defaults unlabeled namespaces to PSA **baseline**. Longho
 
 Traefik is `Service type: LoadBalancer` at **172.16.30.11** (MetalLB L2). Container ports stay 8000/8443; Service exposes 80/443. Not hostNetwork.
 
-Longhorn lab: workers need `node.longhorn.io/create-default-disk=true` (Helm `createDefaultDiskLabeledNodes`). Default StorageClass from the chart baked `numberOfReplicas: "3"` (parameters immutable); use `longhorn-lab` (2 replicas) until that SC is recreated. `defaultSettings.defaultReplicaCount` is the chart key, not `replicaCount`.
+Longhorn lab: workers need `node.longhorn.io/create-default-disk=true` (Helm `createDefaultDiskLabeledNodes`). Durable via Talos v1.14 `KubeNodeConfig.labels` (`talos/patches/worker-longhorn-labels.yaml`); do not put it on the CP. kubectl labels alone do not survive a Talos kubelet rewrite. Default StorageClass from the chart baked `numberOfReplicas: "3"` (parameters immutable); use `longhorn-lab` (2 replicas) until that SC is recreated. `defaultSettings.defaultReplicaCount` is the chart key, not `replicaCount`.
 
 Lab monitoring: kube-prometheus-stack on `longhorn-lab` PVCs (Prometheus 8Gi / Grafana 2Gi). LAN Hosts `grafana.hzr.lab` and `prometheus.hzr.lab`. Alertmanager off. Grafana login is the lab Helm value (admin). Grafana 256Mi limit OOMKilled on first dashboards load; lab limit is 768Mi. Prometheus is pinned to `hzr-w-1`, Grafana to `hzr-w-2` so one 4Gi worker does not run both.
 
