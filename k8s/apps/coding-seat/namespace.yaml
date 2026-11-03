@@ -1,0 +1,9 @@
+# 6 GiB workers, pin hzr-w-2. PSA baseline (same class as lab-probe).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: coding-seat
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

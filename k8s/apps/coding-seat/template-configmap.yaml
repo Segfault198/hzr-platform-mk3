@@ -1,0 +1,78 @@
+# 6 GiB workers, pin hzr-w-2. Template only — Flux must not apply a Job.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crucible-job-template
+  namespace: coding-seat
+data:
+  type-test.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: crucible-test-TASKID
+      namespace: coding-seat
+      labels:
+        hzr.io/kind: crucible
+        hzr.io/type: test
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 600
+      template:
+        metadata:
+          labels:
+            hzr.io/kind: crucible
+            hzr.io/type: test
+        spec:
+          restartPolicy: Never
+          serviceAccountName: crucible
+          automountServiceAccountToken: false
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          imagePullSecrets:
+            - name: ghcr-pull
+          nodeSelector:
+            kubernetes.io/hostname: hzr-w-2
+          containers:
+            - name: runner
+              image: ghcr.io/segfault198/crucible@sha256:8bb21211eff228472f412b93506c7f637ac0a5976088401d723c819f498903f9
+              command: ["/usr/local/bin/crucible-runner"]
+              env:
+                - name: TASK_ID
+                  value: "TASKID"
+                - name: CRUCIBLE_TYPE
+                  value: "test"
+                - name: GIT_URL
+                  value: "https://github.com/Segfault198/hzr-platform-mk3.git"
+                - name: GIT_SHA
+                  value: "4c50dd8164e61cb56457b7fc55733905dc7d6927"
+                - name: TEST_CMD
+                  value: 'test "$(git rev-parse HEAD)" = "$GIT_SHA"'
+                - name: WORK_DIR
+                  value: "/work"
+                - name: HOME
+                  value: "/home/crucible"
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "256Mi"
+                limits:
+                  memory: "512Mi"
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                - name: job
+                  mountPath: /job
+                  readOnly: true
+              livenessProbe:
+                exec:
+                  command: ["test", "-f", "/tmp/runner.alive"]
+                initialDelaySeconds: 5
+                periodSeconds: 10
+          volumes:
+            - name: work
+              emptyDir: {}
+            - name: job
+              secret:
+                secretName: crucible-job-TASKID

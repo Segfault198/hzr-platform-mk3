@@ -1,0 +1,8 @@
+# 6 GiB workers, pin hzr-w-2. No kind: Job here (Flux prune: true).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - limitrange.yaml
+  - template-configmap.yaml

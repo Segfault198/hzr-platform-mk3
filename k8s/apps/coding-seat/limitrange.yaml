@@ -1,0 +1,16 @@
+# 6 GiB workers, pin hzr-w-2. Slice 0/1 cap 512Mi.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: crucible
+  namespace: coding-seat
+spec:
+  limits:
+    - type: Container
+      max:
+        memory: 512Mi
+      default:
+        memory: 512Mi
+      defaultRequest:
+        memory: 256Mi
+        cpu: 50m

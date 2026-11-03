@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - sites-source.yaml
   - longhorn-probe
+  - coding-seat
