@@ -146,7 +146,7 @@ data:
                   cpu: "100m"
                   memory: "1Gi"
                 limits:
-                  memory: "2Gi"
+                  memory: "1Gi"
               volumeMounts:
                 - name: work
                   mountPath: /work

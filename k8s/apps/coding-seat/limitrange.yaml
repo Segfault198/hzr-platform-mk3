@@ -1,4 +1,4 @@
-# 6 GiB workers, pin hzr-w-2. Slice 0/1 cap 512Mi.
+# 6 GiB workers, pin hzr-w-2. Max 2Gi; default 512Mi for unmarked pods.
 apiVersion: v1
 kind: LimitRange
 metadata:
@@ -8,7 +8,7 @@ spec:
   limits:
     - type: Container
       max:
-        memory: 512Mi
+        memory: 2Gi
       default:
         memory: 512Mi
       defaultRequest:
