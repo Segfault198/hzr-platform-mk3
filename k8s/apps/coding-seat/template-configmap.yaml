@@ -36,7 +36,7 @@ data:
             kubernetes.io/hostname: hzr-w-2
           containers:
             - name: runner
-              image: ghcr.io/segfault198/crucible@sha256:ba6930784b14c15aeea227b8517e9a0ed5c89765cf496ee192a376e22d612da6
+              image: ghcr.io/segfault198/crucible@sha256:fec2e3a2c0af85fb7e64d6262a323966f60253abbd313e0dc1b20a852960b704
               command: ["/usr/local/bin/crucible-runner"]
               env:
                 - name: TASK_ID
@@ -109,7 +109,7 @@ data:
             kubernetes.io/hostname: hzr-w-2
           containers:
             - name: runner
-              image: ghcr.io/segfault198/crucible@sha256:ba6930784b14c15aeea227b8517e9a0ed5c89765cf496ee192a376e22d612da6
+              image: ghcr.io/segfault198/crucible@sha256:fec2e3a2c0af85fb7e64d6262a323966f60253abbd313e0dc1b20a852960b704
               command: ["/usr/local/bin/crucible-runner"]
               env:
                 - name: TASK_ID
