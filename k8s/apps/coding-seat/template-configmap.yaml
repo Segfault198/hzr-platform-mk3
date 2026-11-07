@@ -36,7 +36,7 @@ data:
             kubernetes.io/hostname: hzr-w-2
           containers:
             - name: runner
-              image: ghcr.io/segfault198/crucible@sha256:8bb21211eff228472f412b93506c7f637ac0a5976088401d723c819f498903f9
+              image: ghcr.io/segfault198/crucible@sha256:ba6930784b14c15aeea227b8517e9a0ed5c89765cf496ee192a376e22d612da6
               command: ["/usr/local/bin/crucible-runner"]
               env:
                 - name: TASK_ID
@@ -76,3 +76,99 @@ data:
             - name: job
               secret:
                 secretName: crucible-job-TASKID
+  type-grok.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: crucible-grok-TASKID
+      namespace: coding-seat
+      labels:
+        hzr.io/kind: crucible
+        hzr.io/type: handoff
+        hzr.io/mouth: grok
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 600
+      template:
+        metadata:
+          labels:
+            hzr.io/kind: crucible
+            hzr.io/type: handoff
+            hzr.io/mouth: grok
+        spec:
+          restartPolicy: Never
+          serviceAccountName: crucible
+          automountServiceAccountToken: false
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          imagePullSecrets:
+            - name: ghcr-pull
+          nodeSelector:
+            kubernetes.io/hostname: hzr-w-2
+          containers:
+            - name: runner
+              image: ghcr.io/segfault198/crucible@sha256:ba6930784b14c15aeea227b8517e9a0ed5c89765cf496ee192a376e22d612da6
+              command: ["/usr/local/bin/crucible-runner"]
+              env:
+                - name: TASK_ID
+                  value: "TASKID"
+                - name: CRUCIBLE_TYPE
+                  value: "handoff"
+                - name: MOUTH
+                  value: "grok"
+                - name: GIT_URL
+                  value: "https://github.com/Segfault198/hzr-platform-mk3.git"
+                - name: JOB_BRANCH
+                  value: "job/TASKID"
+                - name: TARGET_REF
+                  value: "master"
+                - name: WORK_DIR
+                  value: "/work"
+                - name: HOME
+                  value: "/home/crucible"
+                - name: GROK_HOME
+                  value: "/home/crucible/.grok"
+                - name: GROK_DISABLE_AUTOUPDATER
+                  value: "1"
+                - name: PROMPT_FILE
+                  value: "/job/prompt.md"
+                - name: ANSWER_FILE
+                  value: "/job/inject/answer.md"
+                - name: XAI_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: crucible-job-TASKID
+                      key: xai-api-key
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "1Gi"
+                limits:
+                  memory: "2Gi"
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                - name: job
+                  mountPath: /job
+                  readOnly: true
+                - name: inject
+                  mountPath: /job/inject
+                - name: grok-home
+                  mountPath: /home/crucible/.grok
+              livenessProbe:
+                exec:
+                  command: ["test", "-f", "/tmp/runner.alive"]
+                initialDelaySeconds: 5
+                periodSeconds: 10
+          volumes:
+            - name: work
+              emptyDir: {}
+            - name: job
+              secret:
+                secretName: crucible-job-TASKID
+            - name: inject
+              emptyDir: {}
+            - name: grok-home
+              emptyDir: {}
