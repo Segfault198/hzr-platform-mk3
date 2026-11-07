@@ -124,6 +124,8 @@ data:
                   value: "job/TASKID"
                 - name: TARGET_REF
                   value: "master"
+                - name: GIT_SHA
+                  value: ""
                 - name: WORK_DIR
                   value: "/work"
                 - name: HOME
@@ -136,11 +138,13 @@ data:
                   value: "/job/prompt.md"
                 - name: ANSWER_FILE
                   value: "/job/inject/answer.md"
-                - name: XAI_API_KEY
+                - name: GIT_PUSH
+                  value: "1"
+                - name: GIT_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: crucible-job-TASKID
-                      key: xai-api-key
+                      key: git-token
               resources:
                 requests:
                   cpu: "100m"
@@ -157,6 +161,10 @@ data:
                   mountPath: /job/inject
                 - name: grok-home
                   mountPath: /home/crucible/.grok
+                - name: grok-auth
+                  mountPath: /home/crucible/.grok/auth.json
+                  subPath: auth.json
+                  readOnly: true
               livenessProbe:
                 exec:
                   command: ["test", "-f", "/tmp/runner.alive"]
@@ -168,7 +176,17 @@ data:
             - name: job
               secret:
                 secretName: crucible-job-TASKID
+                items:
+                  - key: prompt.md
+                    path: prompt.md
             - name: inject
               emptyDir: {}
             - name: grok-home
               emptyDir: {}
+            - name: grok-auth
+              secret:
+                secretName: crucible-job-TASKID
+                defaultMode: 384
+                items:
+                  - key: auth.json
+                    path: auth.json
